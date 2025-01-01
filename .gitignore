@@ -1,0 +1,23 @@
+# Node.js関連
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScriptビルド成果物
+out/
+dist/
+
+# VSCode関連
+.vscode/
+*.code-workspace
+
+# OS生成ファイル
+.DS_Store
+Thumbs.db
+
+# ログファイル
+*.log
+
+# パッケージ成果物
+*.vsix
