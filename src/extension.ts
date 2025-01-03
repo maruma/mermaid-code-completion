@@ -47,24 +47,38 @@ export function activate(context: vscode.ExtensionContext) {
           // ユーザージャーニーマップ
           "journey",
           // よく使うスニペット
-          "A --> B",
-          "A -->|text| B",
-          "A --> C",
-          "A --- B",
+          "-->",
+          "-->||",
+          "---",
         ];
 
-        const items = mermaidSnippets.map(
-          (snippet) =>
-            new vscode.CompletionItem(
-              snippet,
-              vscode.CompletionItemKind.Snippet
-            )
-        );
+        const items = mermaidSnippets.map((snippet) => {
+          const completionItem = new vscode.CompletionItem(
+            snippet,
+            vscode.CompletionItemKind.Snippet
+          );
+
+          // カーソル位置の調整
+          if (snippet === "-->||") {
+            completionItem.insertText = new vscode.SnippetString("-->|$1|");
+          } else {
+            completionItem.insertText = snippet;
+          }
+
+          // ハイフン等補完時のトリガー文字を含む範囲指定
+          completionItem.range = new vscode.Range(
+            position.translate(0, -1),
+            position // カーソル位置
+          );
+
+          return completionItem;
+        });
 
         return items;
       },
     },
-    "`" // トリガー文字（`が入力されたとき）
+    "`",
+    "-"
   );
 
   context.subscriptions.push(provider);
