@@ -31,6 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
           "graph LR",
           "graph BT",
           "graph RL",
+          "subgraph",
           // シーケンス図
           "sequenceDiagram",
           // ガントチャート
@@ -50,6 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
           "-->",
           "-->||",
           "---",
+          "-.->",
         ];
 
         const items = mermaidSnippets.map((snippet) => {
@@ -61,6 +63,8 @@ export function activate(context: vscode.ExtensionContext) {
           // カーソル位置の調整
           if (snippet === "-->||") {
             completionItem.insertText = new vscode.SnippetString("-->|$1|");
+          } else if (snippet === "subgraph") {
+            completionItem.insertText = new vscode.SnippetString("subgraph $1");
           } else {
             completionItem.insertText = snippet;
           }
