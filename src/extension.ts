@@ -47,11 +47,14 @@ export function activate(context: vscode.ExtensionContext) {
           "pie",
           // ユーザージャーニーマップ
           "journey",
-          // よく使うスニペット
+          // フローチャート用
           "-->",
           "-->||",
           "---",
           "-.->",
+          // シーケンス図用
+          "->",
+          "->>",
         ];
 
         const items = mermaidSnippets.map((snippet) => {
