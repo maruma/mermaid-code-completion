@@ -24,6 +24,25 @@ export function activate(context: vscode.ExtensionContext) {
           return undefined;
         }
 
+        // "%% 要素" セクションを解析
+        const lines = textBeforeCursor.split("\n");
+        const elementSectionStart = lines.findIndex((line) =>
+          line.trim().startsWith("%% 要素")
+        );
+        const elementSectionEnd = lines.findIndex(
+          (line, index) => index > elementSectionStart && line.trim() === ""
+        );
+
+        const dynamicElements =
+          elementSectionStart !== -1 && elementSectionEnd !== -1
+            ? lines
+                .slice(elementSectionStart + 1, elementSectionEnd)
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0) // 空行を除外
+            : [];
+
+        console.log("動的要素:", dynamicElements);
+
         // Mermaid用のサンプル補完
         const mermaidSnippets = [
           // フローチャート
@@ -57,29 +76,33 @@ export function activate(context: vscode.ExtensionContext) {
           "->>",
         ];
 
-        const items = mermaidSnippets.map((snippet) => {
-          const completionItem = new vscode.CompletionItem(
-            snippet,
-            vscode.CompletionItemKind.Snippet
-          );
+        const items = [...mermaidSnippets, ...dynamicElements].map(
+          (snippet) => {
+            const completionItem = new vscode.CompletionItem(
+              snippet,
+              vscode.CompletionItemKind.Snippet
+            );
 
-          // カーソル位置の調整
-          if (snippet === "-->||") {
-            completionItem.insertText = new vscode.SnippetString("-->|$1|");
-          } else if (snippet === "subgraph") {
-            completionItem.insertText = new vscode.SnippetString("subgraph $1");
-          } else {
-            completionItem.insertText = snippet;
+            // カーソル位置の調整
+            if (snippet === "-->||") {
+              completionItem.insertText = new vscode.SnippetString("-->|$1|");
+            } else if (snippet === "subgraph") {
+              completionItem.insertText = new vscode.SnippetString(
+                "subgraph $1"
+              );
+            } else {
+              completionItem.insertText = snippet;
+            }
+
+            // ハイフン等補完時のトリガー文字を含む範囲指定
+            completionItem.range = new vscode.Range(
+              position.translate(0, -1),
+              position // カーソル位置
+            );
+
+            return completionItem;
           }
-
-          // ハイフン等補完時のトリガー文字を含む範囲指定
-          completionItem.range = new vscode.Range(
-            position.translate(0, -1),
-            position // カーソル位置
-          );
-
-          return completionItem;
-        });
+        );
 
         return items;
       },
