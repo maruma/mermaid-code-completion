@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
           (line, index) => index > elementSectionStart && line.trim() === ""
         );
 
-        const dynamicElements =
+        const definedElements =
           elementSectionStart !== -1 && elementSectionEnd !== -1
             ? lines
                 .slice(elementSectionStart + 1, elementSectionEnd)
@@ -41,7 +41,17 @@ export function activate(context: vscode.ExtensionContext) {
                 .filter((line) => line.length > 0) // 空行を除外
             : [];
 
-        console.log("動的要素:", dynamicElements);
+        console.log("定義された要素:", definedElements);
+
+        // Mermaid記法の左右の単語を抽出
+        const connectionPattern = /(\w+)\s*(-->|-->\|\||---|-\.->)\s*(\w+)/;
+        const dynamicElements = lines
+          .map((line) => connectionPattern.exec(line))
+          .filter((match) => match !== null)
+          .flatMap((match) => [match[1], match[3]])
+          .filter((element) => !definedElements.includes(element));
+
+        console.log("動的に追加された要素:", dynamicElements);
 
         // Mermaid用のサンプル補完
         const mermaidSnippets = [
@@ -76,33 +86,33 @@ export function activate(context: vscode.ExtensionContext) {
           "->>",
         ];
 
-        const items = [...mermaidSnippets, ...dynamicElements].map(
-          (snippet) => {
-            const completionItem = new vscode.CompletionItem(
-              snippet,
-              vscode.CompletionItemKind.Snippet
-            );
+        const items = [
+          ...mermaidSnippets,
+          ...definedElements,
+          ...dynamicElements,
+        ].map((snippet) => {
+          const completionItem = new vscode.CompletionItem(
+            snippet,
+            vscode.CompletionItemKind.Snippet
+          );
 
-            // カーソル位置の調整
-            if (snippet === "-->||") {
-              completionItem.insertText = new vscode.SnippetString("-->|$1|");
-            } else if (snippet === "subgraph") {
-              completionItem.insertText = new vscode.SnippetString(
-                "subgraph $1"
-              );
-            } else {
-              completionItem.insertText = snippet;
-            }
-
-            // ハイフン等補完時のトリガー文字を含む範囲指定
-            completionItem.range = new vscode.Range(
-              position.translate(0, -1),
-              position // カーソル位置
-            );
-
-            return completionItem;
+          // カーソル位置の調整
+          if (snippet === "-->||") {
+            completionItem.insertText = new vscode.SnippetString("-->|$1|");
+          } else if (snippet === "subgraph") {
+            completionItem.insertText = new vscode.SnippetString("subgraph $1");
+          } else {
+            completionItem.insertText = snippet;
           }
-        );
+
+          // ハイフン等補完時のトリガー文字を含む範囲指定
+          completionItem.range = new vscode.Range(
+            position.translate(0, -1),
+            position // カーソル位置
+          );
+
+          return completionItem;
+        });
 
         return items;
       },
